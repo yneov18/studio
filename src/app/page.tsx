@@ -56,7 +56,7 @@ export default function CementTrackPage() {
       <Header units={units} setUnits={setUnits} />
       <main className="flex-1 p-4 sm:p-6 md:p-8">
         <Tabs defaultValue="rig-tanks" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 no-print">
+          <TabsList className="no-print">
             <TabsTrigger value="rig-tanks">Appareil & Bacs</TabsTrigger>
             <TabsTrigger value="cementing-job">Job de Cimentation</TabsTrigger>
             <TabsTrigger value="report">Rapport</TabsTrigger>
