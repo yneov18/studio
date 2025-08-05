@@ -9,6 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import type { Units } from "@/lib/conversions";
 import { convertVolume, convertLevel } from "@/lib/conversions";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 type CementingJobTabProps = {
     jobData: JobData;
@@ -20,10 +26,13 @@ type CementingJobTabProps = {
 
 export default function CementingJobTab({ jobData, setJobData, tanks, setTanks, units }: CementingJobTabProps) {
 
-    const handleJobDataChange = (field: keyof JobData, value: number) => {
-        // Value from input is always in the current display unit
-        const valueInM3 = convertVolume(value, units.volume, 'm³');
-        setJobData(prev => ({ ...prev, [field]: valueInM3 }));
+    const handleJobDataChange = (field: keyof JobData, value: number | string | Date) => {
+        if (typeof value === 'number' && (field === 'spacerVolume' || field === 'leadVolume' || field === 'tailVolume')) {
+             const valueInM3 = convertVolume(value, units.volume, 'm³');
+             setJobData(prev => ({ ...prev, [field]: valueInM3 }));
+        } else {
+             setJobData(prev => ({ ...prev, [field]: value }));
+        }
     };
 
     const handleLevelChange = (tankId: string, stage: 'initial' | 'spacer' | 'lead' | 'tail', value: number) => {
@@ -99,7 +108,36 @@ export default function CementingJobTab({ jobData, setJobData, tanks, setTanks, 
                 <CardHeader>
                     <CardTitle>Données du Job de Cimentation</CardTitle>
                 </CardHeader>
-                <CardContent className="grid sm:grid-cols-3 gap-4">
+                <CardContent className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div className="space-y-2 lg:col-span-2">
+                        <Label>Nom du Job</Label>
+                        <Input value={jobData.jobName} onChange={e => handleJobDataChange('jobName', e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Date du Job</Label>
+                         <Popover>
+                            <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !jobData.jobDate && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {jobData.jobDate ? format(jobData.jobDate, "PPP") : <span>Choisir une date</span>}
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                            <Calendar
+                                mode="single"
+                                selected={jobData.jobDate}
+                                onSelect={(date) => handleJobDataChange('jobDate', date || new Date())}
+                                initialFocus
+                            />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                     <div className="space-y-2">
                         <Label>Volume Spacer ({units.volume})</Label>
                         <Input type="number" value={convertVolume(jobData.spacerVolume, 'm³', units.volume)} onChange={e => handleJobDataChange('spacerVolume', parseFloat(e.target.value))} />

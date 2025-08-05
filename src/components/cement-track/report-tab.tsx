@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
 import type { Units } from "@/lib/conversions";
 import { convertVolume, convertLevel } from "@/lib/conversions";
+import { format } from "date-fns";
 
 type ReportTabProps = {
     rigName: string;
@@ -82,10 +83,12 @@ export default function ReportTab({ rigName, jobData, tanks, units }: ReportTabP
 
     return (
         <div className="space-y-6 mt-4">
-             <div className="flex justify-between items-start">
+             <div className="flex justify-between items-start print:items-center print:flex-col print:gap-4">
                 <div className="space-y-2">
                     <h1 className="text-3xl font-bold">Rapport de Cimentation</h1>
-                    <p className="text-muted-foreground">Résumé de l'opération de cimentation pour {rigName}.</p>
+                    <p className="text-muted-foreground">
+                        <strong>Appareil:</strong> {rigName} | <strong>Job:</strong> {jobData.jobName} | <strong>Date:</strong> {format(jobData.jobDate, "PPP")}
+                    </p>
                 </div>
                 <Button onClick={handlePrint} className="no-print">
                     <Printer className="mr-2" /> Imprimer le Rapport

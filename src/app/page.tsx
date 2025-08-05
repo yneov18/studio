@@ -24,6 +24,8 @@ export type Tank = {
 };
 
 export type JobData = {
+  jobName: string;
+  jobDate: Date;
   spacerVolume: number;
   leadVolume: number;
   tailVolume: number;
@@ -36,6 +38,8 @@ export default function CementTrackPage() {
     { id: '2', name: 'Bac 2', shape: 'cylindrical', height: 2.5, diameter: 2 },
   ]);
   const [jobData, setJobData] = useState<JobData>({
+    jobName: "Cimentation Puits XYZ-123",
+    jobDate: new Date(),
     spacerVolume: 20,
     leadVolume: 50,
     tailVolume: 30,
