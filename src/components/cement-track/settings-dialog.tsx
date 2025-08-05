@@ -20,7 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import type { ReactNode } from "react";
+import { useTheme } from "next-themes";
 
 type SettingsDialogProps = {
   children: ReactNode;
@@ -29,6 +31,7 @@ type SettingsDialogProps = {
 };
 
 export function SettingsDialog({ children, units, onUnitsChange }: SettingsDialogProps) {
+  const { theme, setTheme } = useTheme();
 
   const handleUnitChange = (category: keyof Units, value: string) => {
     onUnitsChange({ ...units, [category]: value });
@@ -41,45 +44,59 @@ export function SettingsDialog({ children, units, onUnitsChange }: SettingsDialo
         <DialogHeader>
           <DialogTitle>Paramètres</DialogTitle>
           <DialogDescription>
-            Modifier les unités de mesure utilisées dans l'application.
+            Modifier les unités et l'apparence de l'application.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-3 items-center gap-4">
-            <Label>Longueur</Label>
-            <Select value={units.length} onValueChange={(value) => handleUnitChange('length', value)}>
-              <SelectTrigger className="col-span-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="m">Mètres (m)</SelectItem>
-                <SelectItem value="ft">Pieds (ft)</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="grid gap-6 py-4">
+          <div className="space-y-4 rounded-md border p-4">
+             <h3 className="text-sm font-medium">Unités de Mesure</h3>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <Label>Longueur</Label>
+                <Select value={units.length} onValueChange={(value) => handleUnitChange('length', value)}>
+                  <SelectTrigger className="col-span-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="m">Mètres (m)</SelectItem>
+                    <SelectItem value="ft">Pieds (ft)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <Label>Volume</Label>
+                <Select value={units.volume} onValueChange={(value) => handleUnitChange('volume', value)}>
+                  <SelectTrigger className="col-span-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="m³">Mètres cubes (m³)</SelectItem>
+                    <SelectItem value="bbl">Barils (bbl)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <Label>Niveau</Label>
+                <Select value={units.level} onValueChange={(value) => handleUnitChange('level', value)}>
+                  <SelectTrigger className="col-span-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cm">Centimètres (cm)</SelectItem>
+                    <SelectItem value="in">Pouces (in)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
           </div>
-           <div className="grid grid-cols-3 items-center gap-4">
-            <Label>Volume</Label>
-            <Select value={units.volume} onValueChange={(value) => handleUnitChange('volume', value)}>
-              <SelectTrigger className="col-span-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="m³">Mètres cubes (m³)</SelectItem>
-                <SelectItem value="bbl">Barils (bbl)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-           <div className="grid grid-cols-3 items-center gap-4">
-            <Label>Niveau</Label>
-            <Select value={units.level} onValueChange={(value) => handleUnitChange('level', value)}>
-              <SelectTrigger className="col-span-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cm">Centimètres (cm)</SelectItem>
-                <SelectItem value="in">Pouces (in)</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-4 rounded-md border p-4">
+             <h3 className="text-sm font-medium">Apparence</h3>
+            <div className="grid grid-cols-3 items-center gap-4">
+                <Label>Mode Sombre</Label>
+                 <Switch
+                    checked={theme === 'dark'}
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                    className="col-span-2"
+                />
+            </div>
           </div>
         </div>
         <DialogFooter>
