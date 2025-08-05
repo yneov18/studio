@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Drill, Save, FolderOpen, Pencil } from "lucide-react";
+import { Plus, Trash2, Save, FolderOpen, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import React, { useRef, useState } from 'react';
 import { TankDialog } from "./tank-dialog";
+import { OilDerrick } from "../icons";
 
 type RigTanksTabProps = {
     rigName: string;
@@ -163,7 +164,7 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl"><Drill /> Informations sur l'appareil</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-xl"><OilDerrick /> Informations sur l'appareil</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div>
@@ -219,4 +220,3 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
         </div>
     );
 }
-
