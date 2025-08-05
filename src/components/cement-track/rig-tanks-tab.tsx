@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Drill, Save, FolderOpen } from "lucide-react";
+import { Plus, Trash2, Drill, Save, FolderOpen, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import React, { useRef } from 'react';
-
+import React, { useRef, useState } from 'react';
+import { TankDialog } from "./tank-dialog";
 
 type RigTanksTabProps = {
     rigName: string;
@@ -24,25 +23,19 @@ type RigTanksTabProps = {
 export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: RigTanksTabProps) {
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingTank, setEditingTank] = useState<Tank | null>(null);
 
-    const addTank = () => {
-        const newTank: Tank = {
-            id: new Date().getTime().toString(),
-            name: `Bac ${tanks.length + 1}`,
-            shape: 'rectangular',
-            height: 0,
-            length: 0,
-            width: 0,
-        };
-        setTanks([...tanks, newTank]);
+    const addTank = (tank: Tank) => {
+        setTanks([...tanks, tank]);
+    };
+
+    const updateTank = (updatedTank: Tank) => {
+        setTanks(tanks.map(tank => tank.id === updatedTank.id ? updatedTank : tank));
     };
 
     const removeTank = (id: string) => {
         setTanks(tanks.filter(tank => tank.id !== id));
-    };
-
-    const handleTankChange = (id: string, field: keyof Tank, value: string | number) => {
-        setTanks(tanks.map(tank => tank.id === id ? { ...tank, [field]: value } : tank));
     };
     
     const calculateVolume = (tank: Tank) => {
@@ -68,6 +61,25 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
         if (volume <= 0) return 0;
         return volume / (tank.height * 100); // L/cm
     };
+
+    const handleAddNewTank = () => {
+        setEditingTank(null);
+        setIsDialogOpen(true);
+    };
+
+    const handleEditTank = (tank: Tank) => {
+        setEditingTank(tank);
+        setIsDialogOpen(true);
+    };
+
+    const handleSaveTank = (tank: Tank) => {
+        if(editingTank) {
+            updateTank(tank);
+        } else {
+            addTank(tank);
+        }
+    };
+
 
     const saveConfiguration = () => {
         try {
@@ -130,7 +142,6 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
         }
         reader.readAsText(file);
         
-        // Reset file input to allow loading the same file again
         if(fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -143,6 +154,13 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
 
     return (
         <div className="grid gap-6 mt-4">
+            <TankDialog 
+                isOpen={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                onSave={handleSaveTank}
+                tank={editingTank}
+            />
+
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-xl"><Drill /> Informations sur l'appareil</CardTitle>
@@ -170,39 +188,30 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nom</TableHead>
-                                <TableHead>Forme</TableHead>
-                                <TableHead>Hauteur (m)</TableHead>
-                                <TableHead>Longueur (m)</TableHead>
-                                <TableHead>Largeur/Diamètre (m)</TableHead>
                                 <TableHead>Sensibilité (L/cm)</TableHead>
-                                <TableHead>Volume (m³)</TableHead>
-                                <TableHead>Actions</TableHead>
+                                <TableHead>Volume Total (m³)</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {tanks.map((tank) => (
                                 <TableRow key={tank.id}>
-                                    <TableCell><Input value={tank.name} onChange={e => handleTankChange(tank.id, 'name', e.target.value)}/></TableCell>
-                                    <TableCell>
-                                        <Select value={tank.shape} onValueChange={(value: 'rectangular' | 'cylindrical') => handleTankChange(tank.id, 'shape', value)}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="rectangular">Rectangulaire</SelectItem>
-                                                <SelectItem value="cylindrical">Cylindrique</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                    <TableCell className="font-medium">{tank.name}</TableCell>
+                                    <TableCell>{calculateSensitivity(tank).toFixed(2)}</TableCell>
+                                    <TableCell>{calculateVolume(tank).toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" onClick={() => handleEditTank(tank)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => removeTank(tank.id)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
                                     </TableCell>
-                                    <TableCell><Input type="number" value={tank.height || ''} onChange={e => handleTankChange(tank.id, 'height', parseFloat(e.target.value) || 0)} placeholder="Hauteur" /></TableCell>
-                                    <TableCell><Input type="number" value={tank.length || ''} onChange={e => handleTankChange(tank.id, 'length', parseFloat(e.target.value) || 0)} placeholder="Longueur" /></TableCell>
-                                    <TableCell><Input type="number" value={tank.shape === 'rectangular' ? tank.width || '' : tank.diameter || ''} onChange={e => handleTankChange(tank.id, tank.shape === 'rectangular' ? 'width' : 'diameter', parseFloat(e.target.value) || 0)} placeholder={tank.shape === 'rectangular' ? 'Largeur' : 'Diamètre'} /></TableCell>
-                                    <TableCell><Input type="number" value={tank.sensitivity || ''} onChange={e => handleTankChange(tank.id, 'sensitivity', parseFloat(e.target.value) || 0)} placeholder="Optionnel" /></TableCell>
-                                    <TableCell className="font-medium">{calculateVolume(tank).toFixed(2)}</TableCell>
-                                    <TableCell><Button variant="ghost" size="icon" onClick={() => removeTank(tank.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                    <Button onClick={addTank} className="w-full">
+                    <Button onClick={handleAddNewTank} className="w-full">
                         <Plus className="mr-2" /> Ajouter un Bac
                     </Button>
                 </CardContent>
@@ -210,3 +219,4 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
         </div>
     );
 }
+
