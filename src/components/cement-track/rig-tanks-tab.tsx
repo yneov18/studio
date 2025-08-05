@@ -12,7 +12,7 @@ import { Plus, Trash2, Save, FolderOpen, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import React, { useRef, useState } from 'react';
 import { TankDialog } from "./tank-dialog";
-import { OilDerrick } from "../icons";
+import { CustomOilDerrick } from "../icons";
 
 type RigTanksTabProps = {
     rigName: string;
@@ -164,7 +164,7 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl"><OilDerrick /> Informations sur l'appareil</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-xl"><CustomOilDerrick /> Informations sur l'appareil</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div>
