@@ -6,6 +6,8 @@ import { ThemeProvider } from '@/components/cement-track/theme-provider';
 export const metadata: Metadata = {
   title: 'CementTrack',
   description: 'Application for monitoring oil well cementing operations.',
+  manifest: '/manifest.json',
+  themeColor: '#ffffff',
 };
 
 export default function RootLayout({
@@ -19,6 +21,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="icon" href="/icons/icon-192x192.png" />
       </head>
       <body className="font-body antialiased">
         <ThemeProvider

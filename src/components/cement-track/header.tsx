@@ -19,7 +19,7 @@ type HeaderProps = {
 
 export default function Header({ units, setUnits }: HeaderProps) {
   return (
-    <header className="p-4 sm:p-6 border-b bg-card flex items-center justify-between shadow-sm">
+    <header className="p-4 sm:p-6 border-b bg-card flex items-center justify-between shadow-sm no-print">
       <div className="flex items-center gap-3">
         <Drill className="h-10 w-10 text-primary" />
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
