@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, Drill, Save, FolderOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import React, { useRef } from 'react';
+
 
 type RigTanksTabProps = {
     rigName: string;
@@ -21,6 +23,7 @@ type RigTanksTabProps = {
 
 export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: RigTanksTabProps) {
     const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const addTank = () => {
         const newTank: Tank = {
@@ -69,10 +72,20 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
     const saveConfiguration = () => {
         try {
             const config = { rigName, tanks };
-            localStorage.setItem('cementTrackConfig', JSON.stringify(config));
+            const configString = JSON.stringify(config, null, 2);
+            const blob = new Blob([configString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${rigName.replace(/\s+/g, '_') || 'config'}-cimentation.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
             toast({
                 title: "Configuration Enregistrée",
-                description: "Votre configuration a été enregistrée localement.",
+                description: "Le fichier de configuration a été téléchargé.",
             });
         } catch (error) {
             toast({
@@ -83,32 +96,50 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
         }
     };
 
-    const loadConfiguration = () => {
-        try {
-            const savedConfig = localStorage.getItem('cementTrackConfig');
-            if (savedConfig) {
-                const { rigName, tanks } = JSON.parse(savedConfig);
-                setRigName(rigName);
-                setTanks(tanks);
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target?.result;
+                if (typeof text === 'string') {
+                    const { rigName, tanks } = JSON.parse(text);
+                    setRigName(rigName);
+                    setTanks(tanks);
+                    toast({
+                        title: "Configuration Chargée",
+                        description: "La configuration a été chargée avec succès.",
+                    });
+                }
+            } catch (error) {
                 toast({
-                    title: "Configuration Chargée",
-                    description: "Votre configuration a été chargée.",
-                });
-            } else {
-                 toast({
-                    title: "Aucune Configuration",
-                    description: "Aucune configuration enregistrée n'a été trouvée.",
+                    title: "Erreur de Lecture",
+                    description: "Impossible de lire ou de parser le fichier de configuration.",
                     variant: "destructive",
                 });
             }
-        } catch (error) {
-            toast({
+        };
+        reader.onerror = () => {
+             toast({
                 title: "Erreur",
-                description: "Impossible de charger la configuration.",
+                description: "Impossible de lire le fichier.",
                 variant: "destructive",
             });
         }
+        reader.readAsText(file);
+        
+        // Reset file input to allow loading the same file again
+        if(fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
+
+    const loadConfiguration = () => {
+       fileInputRef.current?.click();
+    };
+
 
     return (
         <div className="grid gap-6 mt-4">
@@ -124,6 +155,7 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
                     <div className="flex gap-2">
                         <Button onClick={saveConfiguration}><Save className="mr-2"/> Enregistrer la Configuration</Button>
                         <Button onClick={loadConfiguration} variant="outline"><FolderOpen className="mr-2"/> Charger la Configuration</Button>
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" style={{ display: 'none' }} />
                     </div>
                 </CardContent>
             </Card>
