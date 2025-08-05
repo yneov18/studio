@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Drill } from "lucide-react";
+import { Plus, Trash2, Drill, Save, FolderOpen } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type RigTanksTabProps = {
     rigName: string;
@@ -19,6 +20,7 @@ type RigTanksTabProps = {
 };
 
 export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: RigTanksTabProps) {
+    const { toast } = useToast();
 
     const addTank = () => {
         const newTank: Tank = {
@@ -64,14 +66,65 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
         return volume / (tank.height * 100); // L/cm
     };
 
+    const saveConfiguration = () => {
+        try {
+            const config = { rigName, tanks };
+            localStorage.setItem('cementTrackConfig', JSON.stringify(config));
+            toast({
+                title: "Configuration Enregistrée",
+                description: "Votre configuration a été enregistrée localement.",
+            });
+        } catch (error) {
+            toast({
+                title: "Erreur",
+                description: "Impossible d'enregistrer la configuration.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const loadConfiguration = () => {
+        try {
+            const savedConfig = localStorage.getItem('cementTrackConfig');
+            if (savedConfig) {
+                const { rigName, tanks } = JSON.parse(savedConfig);
+                setRigName(rigName);
+                setTanks(tanks);
+                toast({
+                    title: "Configuration Chargée",
+                    description: "Votre configuration a été chargée.",
+                });
+            } else {
+                 toast({
+                    title: "Aucune Configuration",
+                    description: "Aucune configuration enregistrée n'a été trouvée.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            toast({
+                title: "Erreur",
+                description: "Impossible de charger la configuration.",
+                variant: "destructive",
+            });
+        }
+    };
+
     return (
         <div className="grid gap-6 mt-4">
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl"><Drill /> Nom de l'appareil de forage</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-xl"><Drill /> Informations sur l'appareil</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <Input value={rigName} onChange={(e) => setRigName(e.target.value)} />
+                <CardContent className="space-y-4">
+                    <div>
+                         <Label>Nom de l'appareil de forage</Label>
+                         <Input value={rigName} onChange={(e) => setRigName(e.target.value)} />
+                    </div>
+                    <div className="flex gap-2">
+                        <Button onClick={saveConfiguration}><Save className="mr-2"/> Enregistrer la Configuration</Button>
+                        <Button onClick={loadConfiguration} variant="outline"><FolderOpen className="mr-2"/> Charger la Configuration</Button>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -107,10 +160,10 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
                                             </SelectContent>
                                         </Select>
                                     </TableCell>
-                                    <TableCell><Input type="number" value={tank.height} onChange={e => handleTankChange(tank.id, 'height', parseFloat(e.target.value))} placeholder="Hauteur" /></TableCell>
-                                    <TableCell><Input type="number" value={tank.length || ''} onChange={e => handleTankChange(tank.id, 'length', parseFloat(e.target.value))} placeholder="Longueur" /></TableCell>
-                                    <TableCell><Input type="number" value={tank.shape === 'rectangular' ? tank.width || '' : tank.diameter || ''} onChange={e => handleTankChange(tank.id, tank.shape === 'rectangular' ? 'width' : 'diameter', parseFloat(e.target.value))} placeholder={tank.shape === 'rectangular' ? 'Largeur' : 'Diamètre'} /></TableCell>
-                                    <TableCell><Input type="number" value={tank.sensitivity || ''} onChange={e => handleTankChange(tank.id, 'sensitivity', parseFloat(e.target.value))} placeholder="Optionnel" /></TableCell>
+                                    <TableCell><Input type="number" value={tank.height || ''} onChange={e => handleTankChange(tank.id, 'height', parseFloat(e.target.value) || 0)} placeholder="Hauteur" /></TableCell>
+                                    <TableCell><Input type="number" value={tank.length || ''} onChange={e => handleTankChange(tank.id, 'length', parseFloat(e.target.value) || 0)} placeholder="Longueur" /></TableCell>
+                                    <TableCell><Input type="number" value={tank.shape === 'rectangular' ? tank.width || '' : tank.diameter || ''} onChange={e => handleTankChange(tank.id, tank.shape === 'rectangular' ? 'width' : 'diameter', parseFloat(e.target.value) || 0)} placeholder={tank.shape === 'rectangular' ? 'Largeur' : 'Diamètre'} /></TableCell>
+                                    <TableCell><Input type="number" value={tank.sensitivity || ''} onChange={e => handleTankChange(tank.id, 'sensitivity', parseFloat(e.target.value) || 0)} placeholder="Optionnel" /></TableCell>
                                     <TableCell className="font-medium">{calculateVolume(tank).toFixed(2)}</TableCell>
                                     <TableCell><Button variant="ghost" size="icon" onClick={() => removeTank(tank.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                                 </TableRow>
