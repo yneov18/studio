@@ -1,4 +1,13 @@
-import { Drill } from "lucide-react";
+import { Drill, Info, Mail, Phone, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function Header() {
   return (
@@ -9,6 +18,39 @@ export default function Header() {
           CementTrack
         </h1>
       </div>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="icon">
+            <Info className="h-5 w-5" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contact Information</DialogTitle>
+            <DialogDescription>
+              Information about the application author.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-4">
+              <User className="h-5 w-5 text-muted-foreground" />
+              <span>Benamar Larbi</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Phone className="h-5 w-5 text-muted-foreground" />
+              <a href="tel:+213661277692" className="hover:underline">
+                +213661277692
+              </a>
+            </div>
+            <div className="flex items-center gap-4">
+              <Mail className="h-5 w-5 text-muted-foreground" />
+              <a href="mailto:lbenamar@newpark.com" className="hover:underline">
+                lbenamar@newpark.com
+              </a>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
