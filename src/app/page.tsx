@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/cement-track/header";
 import RigTanksTab from "@/components/cement-track/rig-tanks-tab";
 import CementingJobTab from "@/components/cement-track/cementing-job-tab";
+import type { Units } from "@/lib/conversions";
 
 export type Tank = {
   id: string;
@@ -38,11 +39,16 @@ export default function CementTrackPage() {
     leadVolume: 50,
     tailVolume: 30,
   });
+  const [units, setUnits] = useState<Units>({
+    length: 'm',
+    volume: 'm³',
+    level: 'cm',
+  });
 
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
-      <Header />
+      <Header units={units} setUnits={setUnits} />
       <main className="flex-1 p-4 sm:p-6 md:p-8">
         <Tabs defaultValue="rig-tanks" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -55,6 +61,7 @@ export default function CementTrackPage() {
               setRigName={setRigName}
               tanks={tanks}
               setTanks={setTanks}
+              units={units}
             />
           </TabsContent>
           <TabsContent value="cementing-job">
@@ -63,6 +70,7 @@ export default function CementTrackPage() {
               setJobData={setJobData}
               tanks={tanks}
               setTanks={setTanks}
+              units={units}
             />
           </TabsContent>
         </Tabs>

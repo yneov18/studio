@@ -12,15 +12,18 @@ import { Plus, Trash2, Save, FolderOpen, Pencil, Drill } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import React, { useRef, useState } from 'react';
 import { TankDialog } from "./tank-dialog";
+import type { Units } from "@/lib/conversions";
+import { convertLength, convertVolume } from "@/lib/conversions";
 
 type RigTanksTabProps = {
     rigName: string;
     setRigName: Dispatch<SetStateAction<string>>;
     tanks: Tank[];
     setTanks: Dispatch<SetStateAction<Tank[]>>;
+    units: Units;
 };
 
-export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: RigTanksTabProps) {
+export default function RigTanksTab({ rigName, setRigName, tanks, setTanks, units }: RigTanksTabProps) {
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -159,6 +162,7 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
                 onOpenChange={setIsDialogOpen}
                 onSave={handleSaveTank}
                 tank={editingTank}
+                units={units}
             />
 
             <Card>
@@ -189,7 +193,7 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
                             <TableRow>
                                 <TableHead>Nom</TableHead>
                                 <TableHead>Sensibilité (L/cm)</TableHead>
-                                <TableHead>Volume Total (m³)</TableHead>
+                                <TableHead>Volume Total ({units.volume})</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -198,7 +202,7 @@ export default function RigTanksTab({ rigName, setRigName, tanks, setTanks }: Ri
                                 <TableRow key={tank.id}>
                                     <TableCell className="font-medium">{tank.name}</TableCell>
                                     <TableCell>{calculateSensitivity(tank).toFixed(2)}</TableCell>
-                                    <TableCell>{calculateVolume(tank).toFixed(2)}</TableCell>
+                                    <TableCell>{convertVolume(calculateVolume(tank), 'm³', units.volume).toFixed(2)}</TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="ghost" size="icon" onClick={() => handleEditTank(tank)}>
                                             <Pencil className="h-4 w-4" />

@@ -7,27 +7,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import type { Units } from "@/lib/conversions";
+import { convertVolume, convertLevel } from "@/lib/conversions";
 
 type CementingJobTabProps = {
     jobData: JobData;
     setJobData: Dispatch<SetStateAction<JobData>>;
     tanks: Tank[];
     setTanks: Dispatch<SetStateAction<Tank[]>>;
+    units: Units;
 };
 
-export default function CementingJobTab({ jobData, setJobData, tanks, setTanks }: CementingJobTabProps) {
+export default function CementingJobTab({ jobData, setJobData, tanks, setTanks, units }: CementingJobTabProps) {
 
     const handleJobDataChange = (field: keyof JobData, value: number) => {
-        setJobData(prev => ({ ...prev, [field]: value }));
+        // Value from input is always in the current display unit
+        const valueInM3 = convertVolume(value, units.volume, 'm³');
+        setJobData(prev => ({ ...prev, [field]: valueInM3 }));
     };
 
     const handleLevelChange = (tankId: string, stage: 'initial' | 'spacer' | 'lead' | 'tail', value: number) => {
+        // Value from input is always in the current display unit
+        const valueInCm = convertLevel(value, units.level, 'cm');
         const levelKey = `${stage}Level` as keyof Tank;
-        setTanks(tanks.map(t => t.id === tankId ? { ...t, [levelKey]: value } : t));
+        setTanks(tanks.map(t => t.id === tankId ? { ...t, [levelKey]: valueInCm } : t));
     };
 
-    const calculateVolumeFromLevel = (tank: Tank, level?: number): number => {
-        if (level === undefined || level === null) return 0;
+    const calculateVolumeFromLevel = (tank: Tank, levelCm?: number): number => {
+        if (levelCm === undefined || levelCm === null) return 0;
         if (tank.height <= 0) return 0;
         
         let sensitivityLperCm: number;
@@ -39,7 +46,7 @@ export default function CementingJobTab({ jobData, setJobData, tanks, setTanks }
             sensitivityLperCm = totalVolumeL / (tank.height * 100);
         }
         
-        const volumeInLiters = sensitivityLperCm * level;
+        const volumeInLiters = sensitivityLperCm * levelCm;
         return volumeInLiters / 1000; // Convert to m³
     };
     
@@ -79,7 +86,11 @@ export default function CementingJobTab({ jobData, setJobData, tanks, setTanks }
         }, 0);
     };
 
-    const totalPumped = getStageVolume('spacer') + getStageVolume('lead') + getStageVolume('tail');
+    const pumpedSpacer = getStageVolume('spacer');
+    const pumpedLead = getStageVolume('lead');
+    const pumpedTail = getStageVolume('tail');
+
+    const totalPumped = pumpedSpacer + pumpedLead + pumpedTail;
     const totalPlanned = jobData.spacerVolume + jobData.leadVolume + jobData.tailVolume;
 
     return (
@@ -90,16 +101,16 @@ export default function CementingJobTab({ jobData, setJobData, tanks, setTanks }
                 </CardHeader>
                 <CardContent className="grid sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                        <Label>Volume Spacer (m³)</Label>
-                        <Input type="number" value={jobData.spacerVolume} onChange={e => handleJobDataChange('spacerVolume', parseFloat(e.target.value))} />
+                        <Label>Volume Spacer ({units.volume})</Label>
+                        <Input type="number" value={convertVolume(jobData.spacerVolume, 'm³', units.volume)} onChange={e => handleJobDataChange('spacerVolume', parseFloat(e.target.value))} />
                     </div>
                     <div className="space-y-2">
-                        <Label>Volume Laitier de Tête (m³)</Label>
-                        <Input type="number" value={jobData.leadVolume} onChange={e => handleJobDataChange('leadVolume', parseFloat(e.target.value))} />
+                        <Label>Volume Laitier de Tête ({units.volume})</Label>
+                        <Input type="number" value={convertVolume(jobData.leadVolume, 'm³', units.volume)} onChange={e => handleJobDataChange('leadVolume', parseFloat(e.target.value))} />
                     </div>
                     <div className="space-y-2">
-                        <Label>Volume Laitier de Fond (m³)</Label>
-                        <Input type="number" value={jobData.tailVolume} onChange={e => handleJobDataChange('tailVolume', parseFloat(e.target.value))} />
+                        <Label>Volume Laitier de Fond ({units.volume})</Label>
+                        <Input type="number" value={convertVolume(jobData.tailVolume, 'm³', units.volume)} onChange={e => handleJobDataChange('tailVolume', parseFloat(e.target.value))} />
                     </div>
                 </CardContent>
             </Card>
@@ -112,34 +123,34 @@ export default function CementingJobTab({ jobData, setJobData, tanks, setTanks }
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Bac</TableHead>
-                                <TableHead>Niveau Initial (cm)</TableHead>
-                                <TableHead>Niveau après Spacer (cm)</TableHead>
-                                <TableHead>Niveau après Lead (cm)</TableHead>
-                                <TableHead>Niveau après Tail (cm)</TableHead>
+                                <TableHead>Niveau Initial ({units.level})</TableHead>
+                                <TableHead>Niveau après Spacer ({units.level})</TableHead>
+                                <TableHead>Niveau après Lead ({units.level})</TableHead>
+                                <TableHead>Niveau après Tail ({units.level})</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {tanks.map(tank => (
                                 <TableRow key={tank.id}>
                                     <TableCell className="font-medium">{tank.name}</TableCell>
-                                    <TableCell><Input type="number" placeholder="cm" value={tank.initialLevel || ''} onChange={e => handleLevelChange(tank.id, 'initial', parseFloat(e.target.value))} /></TableCell>
-                                    <TableCell><Input type="number" placeholder="cm" value={tank.spacerLevel || ''} onChange={e => handleLevelChange(tank.id, 'spacer', parseFloat(e.target.value))} /></TableCell>
-                                    <TableCell><Input type="number" placeholder="cm" value={tank.leadLevel || ''} onChange={e => handleLevelChange(tank.id, 'lead', parseFloat(e.target.value))} /></TableCell>
-                                    <TableCell><Input type="number" placeholder="cm" value={tank.tailLevel || ''} onChange={e => handleLevelChange(tank.id, 'tail', parseFloat(e.target.value))} /></TableCell>
+                                    <TableCell><Input type="number" placeholder={units.level} value={tank.initialLevel !== undefined ? convertLevel(tank.initialLevel, 'cm', units.level) : ''} onChange={e => handleLevelChange(tank.id, 'initial', parseFloat(e.target.value))} /></TableCell>
+                                    <TableCell><Input type="number" placeholder={units.level} value={tank.spacerLevel !== undefined ? convertLevel(tank.spacerLevel, 'cm', units.level) : ''} onChange={e => handleLevelChange(tank.id, 'spacer', parseFloat(e.target.value))} /></TableCell>
+                                    <TableCell><Input type="number" placeholder={units.level} value={tank.leadLevel !== undefined ? convertLevel(tank.leadLevel, 'cm', units.level) : ''} onChange={e => handleLevelChange(tank.id, 'lead', parseFloat(e.target.value))} /></TableCell>
+                                    <TableCell><Input type="number" placeholder={units.level} value={tank.tailLevel !== undefined ? convertLevel(tank.tailLevel, 'cm', units.level) : ''} onChange={e => handleLevelChange(tank.id, 'tail', parseFloat(e.target.value))} /></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                         <TableFooter>
                             <TableRow className="bg-muted/50">
-                                <TableHead>Volume Pompé (m³)</TableHead>
+                                <TableHead>Volume Pompé ({units.volume})</TableHead>
                                 <TableCell></TableCell>
-                                <TableCell className="font-bold">{getStageVolume('spacer').toFixed(2)}</TableCell>
-                                <TableCell className="font-bold">{getStageVolume('lead').toFixed(2)}</TableCell>
-                                <TableCell className="font-bold">{getStageVolume('tail').toFixed(2)}</TableCell>
+                                <TableCell className="font-bold">{convertVolume(pumpedSpacer, 'm³', units.volume).toFixed(2)}</TableCell>
+                                <TableCell className="font-bold">{convertVolume(pumpedLead, 'm³', units.volume).toFixed(2)}</TableCell>
+                                <TableCell className="font-bold">{convertVolume(pumpedTail, 'm³', units.volume).toFixed(2)}</TableCell>
                             </TableRow>
                              <TableRow className="bg-secondary">
-                                <TableHead colSpan={4}>Total Pompé / Total Prévu (m³)</TableHead>
-                                <TableCell className="font-extrabold text-lg">{totalPumped.toFixed(2)} / {totalPlanned.toFixed(2)}</TableCell>
+                                <TableHead colSpan={4}>Total Pompé / Total Prévu ({units.volume})</TableHead>
+                                <TableCell className="font-extrabold text-lg">{convertVolume(totalPumped, 'm³', units.volume).toFixed(2)} / {convertVolume(totalPlanned, 'm³', units.volume).toFixed(2)}</TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
